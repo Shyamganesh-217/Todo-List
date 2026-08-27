@@ -18,7 +18,11 @@ function TodoList() {
   });
 
   useEffect(() => {
-    localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos));
+    try {
+      localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos));
+    } catch {
+      // Storage may be unavailable or full; keep the in-memory list usable.
+    }
   }, [todos]);
 
   // =====================================================
@@ -54,7 +58,7 @@ function TodoList() {
     };
 
     // Add new todo
-    setTodos([...todos, newTodo]);
+    setTodos((currentTodos) => [...currentTodos, newTodo]);
 
     // Clear input
     setInput("");
@@ -69,8 +73,8 @@ function TodoList() {
       return;
     }
 
-    setTodos(
-      todos.map((todo) =>
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
         todo.id === editId
           ? {
               ...todo,
@@ -91,8 +95,8 @@ function TodoList() {
   // DELETE TODO
   // =====================================================
   const handleDelete = (id) => {
-    setTodos(
-      todos.filter((todo) => todo.id !== id)
+    setTodos((currentTodos) =>
+      currentTodos.filter((todo) => todo.id !== id)
     );
 
     // If deleting the currently edited todo
@@ -106,8 +110,8 @@ function TodoList() {
   // COMPLETE / UNCOMPLETE TODO
   // =====================================================
   const handleComplete = (id) => {
-    setTodos(
-      todos.map((todo) =>
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
         todo.id === id
           ? {
               ...todo,
