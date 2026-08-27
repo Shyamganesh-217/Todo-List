@@ -1,11 +1,25 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './todo.css';
+
+const TODO_STORAGE_KEY = 'todos';
 
 function TodoList() {
   // =====================================================
   // 1. TODO LIST STATE
   // =====================================================
-  const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState(() => {
+    try {
+      const storedTodos = localStorage.getItem(TODO_STORAGE_KEY);
+      const parsedTodos = storedTodos ? JSON.parse(storedTodos) : [];
+      return Array.isArray(parsedTodos) ? parsedTodos : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos));
+  }, [todos]);
 
   // =====================================================
   // 2. INPUT BOX STATE
