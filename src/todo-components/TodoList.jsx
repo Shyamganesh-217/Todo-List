@@ -17,6 +17,45 @@ function TodoList() {
     }
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    setIsLoading(true);
+    setLoadError("");
+
+    fetch("https://jsonplaceholder.typicode.com/todos?_limit=10")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to load todos");
+        }
+
+        return response.json();
+      })
+      .then((apiTodos) => {
+        const formattedTodos = apiTodos.map((todo) => ({
+          id: todo.id,
+          text: todo.title,
+          completed: todo.completed,
+        }));
+
+        setTodos((currentTodos) => {
+          const apiTodoIds = new Set(formattedTodos.map((todo) => todo.id));
+          const localTodos = currentTodos.filter(
+            (todo) => !apiTodoIds.has(todo.id)
+          );
+
+          return [...formattedTodos, ...localTodos];
+        });
+      })
+      .catch(() => {
+        setLoadError("Todos load aagala. Please try again.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos));
@@ -104,6 +143,15 @@ function TodoList() {
       setEditId(null);
       setEditText("");
     }
+  };
+
+  // =====================================================
+  // CLEAR ALL TODOS
+  // =====================================================
+  const handleClearAll = () => {
+    setTodos([]);
+    setEditId(null);
+    setEditText("");
   };
 
   // =====================================================
@@ -208,11 +256,15 @@ function TodoList() {
       ================================================= */}
       <ul className="todo-list">
 
-        {todos.length === 0 ? (
+        {isLoading && <p className="empty-message">Loading todos...</p>}
+
+        {loadError && <p className="error-message">{loadError}</p>}
+
+        {!isLoading && !loadError && todos.length === 0 ? (
           <p className="empty-message">
             No tasks yet. Add a task!
           </p>
-        ) : (
+        ) : !isLoading && !loadError ? (
           todos.map((todo) => (
 
             <li
@@ -308,7 +360,7 @@ function TodoList() {
             </li>
 
           ))
-        )}
+        ) : null}
 
       </ul>
 
@@ -326,6 +378,14 @@ function TodoList() {
         </span>
 
       </div>
+
+      <button
+        className="clear-all-btn"
+        onClick={handleClearAll}
+        disabled={todos.length === 0}
+      >
+        Clear All
+      </button>
 
     </div>
   );
